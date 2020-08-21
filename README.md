@@ -64,7 +64,7 @@ For this assignment you will need some specific tools
 - You may have other sections in your analysis, but Data Processing and Results are required.
 - The analysis document must have at least one figure containing a plot.
 - Your analysis must have no more than three figures. Figures may have multiple plots in them (i.e. panel plots), but there cannot be more than three figures total.
-- You must show all your code for the work in your analysis document. This may make the document a bit verbose, but that is okay. In general, you should ensure that \color{red}{\verb|echo = TRUE|}echo = TRUE for every code chunk (this is the default setting in knitr).
+- You must show all your code for the work in your analysis document. This may make the document a bit verbose, but that is okay. In general, you should ensure that echo = TRUE for every code chunk (this is the default setting in knitr).
 
 ## Publishing Your Analysis
 For this assignment you will need to publish your analysis on RPubs.com. If you do not already have an account, then you will have to create a new account. After you have completed writing your analysis in RStudio, you can publish it to RPubs by doing the following:
