@@ -1,0 +1,299 @@
+Health and economic impacts of extreme weather-related events
+================
+Victoria Mestre Runge
+21 agost de 2020
+
+-   [Synopsis](#synopsis)
+-   [Data processing](#data-processing)
+-   [Results](#results)
+-   [Conclusion:](#conclusion)
+
+Synopsis
+--------
+
+Storms and other severe weather events can cause both public health and economic problems for communities and municipalities. Many severe events can result in fatalities, injuries, and property damage, and preventing such outcomes to the extent possible is a key concern. This project involves exploring the US National Oceanic and Atmospheric Administration's (NOAA) storm database which tracks characteristics of major storms and weather events in the US including when and where they occur, as well as estimates of any fatalities, injuries, and property damage.
+
+The analysis on the data revealed that tornadoes are the most harmful in terms of public health. The total injuries and fatalities produced by tornadoes far exceeded other weather/storm events and had the greatest overall health impact. In terms of monetary damage and loss, analysis on the data showed that floods are by far the most costly event, affecting both property and crops and resulting in the largest economic impact.
+
+Data processing
+---------------
+
+#### Data and documentation
+
+Data come in a file compressed via the bzip2 which can be found in the following link:
+
+[Storm Data](https://d396qusza40orc.cloudfront.net/repdata%2Fdata%2FStormData.csv.bz2) \[47Mb\]
+
+Additional documentation can be found here:
+
+-   National Weather Service: [Storm Data Documentation](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2Fpd01016005curr.pdf)
+-   National Climatic Data Center: [Storm Events FAQ](https://d396qusza40orc.cloudfront.net/repdata%2Fpeer2_doc%2FNCDC%20Storm%20Events-FAQ%20Page.pdf)
+
+#### Required packages for analysis
+
+#### Reading and exploring the data frame
+
+``` r
+# Reading Storm dataset
+if(!exists("dtStorm")) {
+  stormDF <- read.csv("repdata_data_StormData.csv.bz2", header = TRUE, sep = ",", stringsAsFactors = FALSE)
+}
+```
+
+``` r
+str(stormDF) # Structure
+```
+
+    ## 'data.frame':    902297 obs. of  37 variables:
+    ##  $ STATE__   : num  1 1 1 1 1 1 1 1 1 1 ...
+    ##  $ BGN_DATE  : chr  "4/18/1950 0:00:00" "4/18/1950 0:00:00" "2/20/1951 0:00:00" "6/8/1951 0:00:00" ...
+    ##  $ BGN_TIME  : chr  "0130" "0145" "1600" "0900" ...
+    ##  $ TIME_ZONE : chr  "CST" "CST" "CST" "CST" ...
+    ##  $ COUNTY    : num  97 3 57 89 43 77 9 123 125 57 ...
+    ##  $ COUNTYNAME: chr  "MOBILE" "BALDWIN" "FAYETTE" "MADISON" ...
+    ##  $ STATE     : chr  "AL" "AL" "AL" "AL" ...
+    ##  $ EVTYPE    : chr  "TORNADO" "TORNADO" "TORNADO" "TORNADO" ...
+    ##  $ BGN_RANGE : num  0 0 0 0 0 0 0 0 0 0 ...
+    ##  $ BGN_AZI   : chr  "" "" "" "" ...
+    ##  $ BGN_LOCATI: chr  "" "" "" "" ...
+    ##  $ END_DATE  : chr  "" "" "" "" ...
+    ##  $ END_TIME  : chr  "" "" "" "" ...
+    ##  $ COUNTY_END: num  0 0 0 0 0 0 0 0 0 0 ...
+    ##  $ COUNTYENDN: logi  NA NA NA NA NA NA ...
+    ##  $ END_RANGE : num  0 0 0 0 0 0 0 0 0 0 ...
+    ##  $ END_AZI   : chr  "" "" "" "" ...
+    ##  $ END_LOCATI: chr  "" "" "" "" ...
+    ##  $ LENGTH    : num  14 2 0.1 0 0 1.5 1.5 0 3.3 2.3 ...
+    ##  $ WIDTH     : num  100 150 123 100 150 177 33 33 100 100 ...
+    ##  $ F         : int  3 2 2 2 2 2 2 1 3 3 ...
+    ##  $ MAG       : num  0 0 0 0 0 0 0 0 0 0 ...
+    ##  $ FATALITIES: num  0 0 0 0 0 0 0 0 1 0 ...
+    ##  $ INJURIES  : num  15 0 2 2 2 6 1 0 14 0 ...
+    ##  $ PROPDMG   : num  25 2.5 25 2.5 2.5 2.5 2.5 2.5 25 25 ...
+    ##  $ PROPDMGEXP: chr  "K" "K" "K" "K" ...
+    ##  $ CROPDMG   : num  0 0 0 0 0 0 0 0 0 0 ...
+    ##  $ CROPDMGEXP: chr  "" "" "" "" ...
+    ##  $ WFO       : chr  "" "" "" "" ...
+    ##  $ STATEOFFIC: chr  "" "" "" "" ...
+    ##  $ ZONENAMES : chr  "" "" "" "" ...
+    ##  $ LATITUDE  : num  3040 3042 3340 3458 3412 ...
+    ##  $ LONGITUDE : num  8812 8755 8742 8626 8642 ...
+    ##  $ LATITUDE_E: num  3051 0 0 0 0 ...
+    ##  $ LONGITUDE_: num  8806 0 0 0 0 ...
+    ##  $ REMARKS   : chr  "" "" "" "" ...
+    ##  $ REFNUM    : num  1 2 3 4 5 6 7 8 9 10 ...
+
+#### Manipulating data for analysis
+
+Observations in the database start in the year 1950 and end in November 2011. In the earlier years of the database there are generally fewer events recorded, most likely due to a lack of good records. Therefore, only the period from 1996 to 2011 has been considered for a more accurated analysis.\*
+
+``` r
+# Changing the class format
+stormDF$BGN_DATE <- as.Date(stormDF$BGN_DATE, '%m/%d/%Y')
+# Subsetting data as from 1996
+new_stormDF <- stormDF[stormDF$BGN_DATE >= '1996-01-01',]
+```
+
+Storm database contains a total of 37 variables. To simplify the dataset further it has been subsetted to include only the variables interesting to our research questions. In our case, beside the *Event\_type* and the *Date* columns, the variables *Fatalities* and *Injuries* has been used to analyse Health impacts while *Property damages* and *Crop damages* has been used to check the Economic effects of weather disasters.
+
+``` r
+# Creating a table with Health data
+stormHealthDF <- subset(new_stormDF, select=c(BGN_DATE, EVTYPE, FATALITIES, INJURIES))
+names(stormHealthDF) <- c("Date", "Event_type", "Fatalities", "Injuries")
+# Creating a table with Economic data 
+stormEcoDF <- subset(new_stormDF, select=c(BGN_DATE, EVTYPE, PROPDMG, PROPDMGEXP, CROPDMG, CROPDMGEXP))
+names(stormEcoDF) <- c("Date", "Event_type", "Property_Damages", "Property_Damages_Units", "Crop_Damages", "Crop_Damages_Units")
+```
+
+There are many observations with values equal to zero, therefore a filtering strategy has been made to avoid zero values in all rows.
+
+``` r
+# Filtering data of both tables (Health and Economic) with values greater than 0 in all columns. 
+stormHealthDF <- stormHealthDF[stormHealthDF$Injuries > 0 | stormHealthDF$Fatalities > 0  , c("Date", "Event_type", "Fatalities", "Injuries")]
+stormEcoDF <- stormEcoDF[stormEcoDF$Property_Damages > 0 | stormEcoDF$Crop_Damages > 0  , c("Date", "Event_type", "Property_Damages", "Property_Damages_Units", "Crop_Damages", "Crop_Damages_Units")]
+```
+
+After subssetting the Storm database by a period of time, choosing only the columns we choose for analysis and filtering data greater than zero, we still see far more type of events (EVTYPE) recorded than the official 48. To achieve the 48 offical weather-related type of events we need to expend a lot of time cleaning the dataset. In the time limitation of this analysis, the "toupper" function has been used to reduce the "event types" in the dataset, which converts a lowercase string to a uppercase string. **Note**: other strategies and cleaning producedures should be done to perform a better analysis. Check further data analysis: unique(stormHealthDF$Event\_type).
+
+``` r
+# Converting lower case to upper case
+stormHealthDF$Event_type <- toupper(stormHealthDF$Event_type)
+stormEcoDF$Event_type <- toupper(stormEcoDF$Event_type)
+stormEcoDF$Property_Damages_Units <- toupper(stormEcoDF$Property_Damages_Units)
+stormEcoDF$Crop_Damages_Units <- toupper(stormEcoDF$Crop_Damages_Units)
+```
+
+In order to analyse **which storm events are the most harmful to population health in the US**, it has been selected the most harmful weather events that caused the highest number of deaths and injuries among the US population. First by grouping data per type of the weather event and subsetting only the most harmful for the health society.
+
+``` r
+# Create a table for Fatalities
+agg_healthFatalities <- aggregate(Fatalities~Event_type, stormHealthDF, sum)
+# Rename columns
+names(agg_healthFatalities) <- c("Event_Type", "Total_Fatalities")
+# Create a table for Injuries
+agg_healthInjuries <- aggregate(Injuries~Event_type, stormHealthDF, sum)
+# Rename columns
+names(agg_healthInjuries) <- c("Event_Type", "Total_Injuries")
+# Select the most severe Weather Events impacts in Health
+top_healthFatalities <- agg_healthFatalities[order(agg_healthFatalities$Total_Fatalities, decreasing = TRUE), ][1:10, ]
+top_healthInjuries <- agg_healthInjuries[order(agg_healthInjuries$Total_Injuries, decreasing = TRUE), ][1:10, ]
+# Check the databases
+top_healthFatalities
+```
+
+    ##         Event_Type Total_Fatalities
+    ## 22  EXCESSIVE HEAT             1797
+    ## 102        TORNADO             1511
+    ## 29     FLASH FLOOD              887
+    ## 68       LIGHTNING              651
+    ## 30           FLOOD              414
+    ## 82     RIP CURRENT              340
+    ## 105      TSTM WIND              241
+    ## 42            HEAT              237
+    ## 55       HIGH WIND              235
+    ## 1        AVALANCHE              223
+
+``` r
+top_healthInjuries
+```
+
+    ##            Event_Type Total_Injuries
+    ## 102           TORNADO          20667
+    ## 30              FLOOD           6758
+    ## 22     EXCESSIVE HEAT           6391
+    ## 68          LIGHTNING           4141
+    ## 105         TSTM WIND           3629
+    ## 29        FLASH FLOOD           1674
+    ## 99  THUNDERSTORM WIND           1400
+    ## 121      WINTER STORM           1292
+    ## 58  HURRICANE/TYPHOON           1275
+    ## 42               HEAT           1222
+
+Results
+-------
+
+Below, it can be visualised the highest effects on health and the economy caused by severe weather events in he United States between 1996 and 2011.
+
+``` r
+# Plot Death plot and store in variable
+ggplot(top_healthFatalities, aes(reorder(Event_Type, -Total_Fatalities), Total_Fatalities, fill=Event_Type)) + 
+        geom_bar(stat= "identity", show.legend=F) +
+        geom_text(aes(label=Total_Fatalities), vjust=1.6, color="black", position=position_dodge(0.9), size=2.5) +
+        theme(axis.text.x=element_text(angle=45, hjust=1)) +
+        xlab("Weather Events") + ylab("Number of Deaths") + 
+        ggtitle("Highest fatalities caused by severe Weather Events in U.S. (1996 - 2011)")
+```
+
+![](US-Storm-Data-Analysis-1_files/figure-markdown_github/Health%20impact%20plots-1.png)
+
+``` r
+# Plot Injuries plot and store in variable
+ggplot(top_healthInjuries, aes(reorder(Event_Type, -Total_Injuries), Total_Injuries, fill=Event_Type)) + 
+        geom_bar(stat= "identity", show.legend=F) +
+        geom_text(aes(label=Total_Injuries), vjust=1.6, color="black", position=position_dodge(0.9), size=2.5) +
+        theme(axis.text.x=element_text(angle=45, hjust=1)) +
+        xlab("Weather Events") + ylab("Number of Injuries") + 
+        ggtitle("Highest injuries caused by severe Weather Events in U.S. (1996 - 2011)")
+```
+
+![](US-Storm-Data-Analysis-1_files/figure-markdown_github/Health%20impact%20plots-2.png)
+
+Figure 1 and figure 2 highlights that excessive heat and tornadoes caused the highest number of fatalaties between 1996-2011, while tornadoes caused the greatest number of injuries.
+
+And finally to asses **which types of extreme weather events have the greatest economic consequences in the U.S.** it has been selected the most harmful weather events that caused the highest number of damages in properties and agriculture in the US.
+
+``` r
+# Create two tables. One for Property and the other for Crop Damages
+agg_eccProp <- aggregate(stormEcoDF$Property_Damages, by=list(stormEcoDF$Event_type), FUN="sum")
+agg_eccCrop <- aggregate(stormEcoDF$Crop_Damages, by=list(stormEcoDF$Event_type), FUN="sum")
+# Rename columns
+names(agg_eccProp) <- c("Event_Type", "Total_Property_Damage")
+names(agg_eccCrop) <- c("Event_Type", "Total_Crop_Damage")
+# Select the most severe Weather Events impacts in the Economy
+top_eccProp <- agg_eccProp[order(agg_eccProp$Total_Property_Damage, decreasing = TRUE), ][1:10, ]
+top_eccCrop <- agg_eccCrop[order(agg_eccCrop$Total_Crop_Damage, decreasing = TRUE), ][1:10, ]
+# Check the databases
+top_eccProp
+```
+
+    ##            Event_Type Total_Property_Damage
+    ## 124         TSTM WIND            1330736.91
+    ## 38        FLASH FLOOD            1247562.54
+    ## 121           TORNADO            1187878.23
+    ## 119 THUNDERSTORM WIND             862257.36
+    ## 40              FLOOD             824936.71
+    ## 57               HAIL             575317.28
+    ## 89          LIGHTNING             488561.85
+    ## 69          HIGH WIND             315098.06
+    ## 151      WINTER STORM             126910.49
+    ## 62         HEAVY SNOW              89393.11
+
+``` r
+top_eccCrop
+```
+
+    ##            Event_Type Total_Crop_Damage
+    ## 57               HAIL         498339.12
+    ## 38        FLASH FLOOD         161066.71
+    ## 40              FLOOD         151826.18
+    ## 124         TSTM WIND         109110.60
+    ## 121           TORNADO          90128.50
+    ## 119 THUNDERSTORM WIND          66663.00
+    ## 26            DROUGHT          33293.62
+    ## 69          HIGH WIND          17268.21
+    ## 60         HEAVY RAIN          10977.71
+    ## 48       FROST/FREEZE           7134.14
+
+According to the National Weather Service instruction, estimates values has three significant digits followed by an alphabetical character signifying the magnitude of the number ("K" for thousands, "M" for millions, and "B" for billions). Therefore, Before ploting the histograms of economic impacts, values has been converted into the same numerical values.
+
+``` r
+# Converting all values into the same unit (large numbers)
+top_eccProp$Total_Property_Damages[top_eccProp$Total_Property_Damages_Units == "K"] <- top_eccProp$Total_Property_Damages*1000 # Thousands
+top_eccProp$Total_Property_Damages[top_eccProp$Total_Property_Damages_Units == "M"] <- top_eccProp$Total_Property_Damages*1000000 # Million
+top_eccProp$Total_Property_Damages[top_eccProp$Total_Property_Damages_Units == "B"] <- top_eccProp$Total_Property_Damages*1000000000 # Billion
+
+top_eccCrop$Total_Crop_Damages[top_eccCrop$Total_Crop_Damages_Units == "K"] <- top_eccCrop$Total_Crop_Damages*1000 # Thousands
+top_eccCrop$Total_Crop_Damages[top_eccCrop$Total_Crop_Damages_Units == "M"] <- top_eccCrop$Total_Crop_Damages*1000000 # Million
+top_eccCrop$Total_Crop_Damages[top_eccCrop$Total_Crop_Damages_Units == "B"] <- top_eccCrop$Total_Crop_Damages*1000000000 # Billion
+
+head(top_eccProp)
+```
+
+    ##            Event_Type Total_Property_Damage
+    ## 124         TSTM WIND             1330736.9
+    ## 38        FLASH FLOOD             1247562.5
+    ## 121           TORNADO             1187878.2
+    ## 119 THUNDERSTORM WIND              862257.4
+    ## 40              FLOOD              824936.7
+    ## 57               HAIL              575317.3
+
+``` r
+# Plotting Property Damages 
+p1 <- ggplot(top_eccProp, aes(reorder(Event_Type, -Total_Property_Damage), round(Total_Property_Damage/1000000,2), fill=Event_Type)) + 
+        geom_bar(stat= "identity", show.legend=F) +
+        geom_text(aes(label=round(Total_Property_Damage/1000000,2)), vjust=1.6, color="black", position=position_dodge(0.9), size=2.5) +
+        theme(axis.text.x=element_text(angle=45, hjust=1)) +
+        xlab("Weather Events") + ylab("Total Damage in Million Dolars") + 
+        ggtitle("Impacts in properties caused by Weather Events (US 1996 - 2011)") + theme(plot.title = element_text(size = 10)) +
+        ylim(0.0, 1.5)
+       
+# Plotting Crop Damages 
+p2 <- ggplot(top_eccCrop, aes(reorder(Event_Type, -Total_Crop_Damage), round(Total_Crop_Damage/1000000,2), fill=Event_Type)) + 
+        geom_bar(stat= "identity", show.legend=F) +
+        geom_text(aes(label=round(Total_Crop_Damage/1000000,2)), vjust=1.6, color="black", position=position_dodge(0.9), size=2.5) +
+        theme(axis.text.x=element_text(angle=45, hjust=1)) +
+        xlab("Weather Events") + ylab("Total Damage in Million Dolars") + 
+        ggtitle("Impacts in agriculture caused by Weather Events (US 1996 - 2011)") + theme(plot.title = element_text(size = 10)) +
+        ylim(0.0, 1.5)
+
+grid.arrange(p1,p2, layout_matrix = rbind(c(6, 1.2),c(6, 1.2)))
+```
+
+![](US-Storm-Data-Analysis-1_files/figure-markdown_github/Economic%20impact%20plots-1.png)
+
+Figure 3 shows that Thunderstorm Wind, Flash Flood and Tornadoes have been devastating and have caused majority of the property damage amounting to approximatelly 1.3 million dollars of public property. On the other hand, Hail account for majority crop damages across the US amounting to 0.5 Million Dollars.
+
+Conclusion:
+-----------
+
+Based on the plots we can say that Tornadoes, and other events such as Floods have been the major event to cause maximum fatalities and Injuries, while Thunderstorm Winds, Flash Flood and Tornadoes have been economically devastating throught the period from 1996 to 2011.
