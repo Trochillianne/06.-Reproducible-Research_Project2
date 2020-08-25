@@ -184,7 +184,7 @@ ggplot(top_healthFatalities, aes(reorder(Event_Type, -Total_Fatalities), Total_F
         ggtitle("Highest fatalities caused by severe Weather Events in U.S. (1996 - 2011)")
 ```
 
-![](US-Storm-Data-Analysis-1_files/figure-markdown_github/Health%20impact%20plots-1.png)
+![](https://github.com/Trochillianne/06.-Reproducible-Research_Project2/blob/master/Figures/Plot1.png)
 
 ``` r
 # Plot Injuries plot and store in variable
@@ -196,7 +196,7 @@ ggplot(top_healthInjuries, aes(reorder(Event_Type, -Total_Injuries), Total_Injur
         ggtitle("Highest injuries caused by severe Weather Events in U.S. (1996 - 2011)")
 ```
 
-![](US-Storm-Data-Analysis-1_files/figure-markdown_github/Health%20impact%20plots-2.png)
+![](https://github.com/Trochillianne/06.-Reproducible-Research_Project2/blob/master/Figures/Plot2.png)
 
 Figure 1 and figure 2 highlights that excessive heat and tornadoes caused the highest number of fatalaties between 1996-2011, while tornadoes caused the greatest number of injuries.
 
@@ -287,9 +287,9 @@ p2 <- ggplot(top_eccCrop, aes(reorder(Event_Type, -Total_Crop_Damage), round(Tot
         ylim(0.0, 1.5)
 
 grid.arrange(p1,p2, layout_matrix = rbind(c(6, 1.2),c(6, 1.2)))
-```
 
-![](US-Storm-Data-Analysis-1_files/figure-markdown_github/Economic%20impact%20plots-1.png)
+```
+![](https://github.com/Trochillianne/06.-Reproducible-Research_Project2/blob/master/Figures/Plot3.png)
 
 Figure 3 shows that Thunderstorm Wind, Flash Flood and Tornadoes have been devastating and have caused majority of the property damage amounting to approximatelly 1.3 million dollars of public property. On the other hand, Hail account for majority crop damages across the US amounting to 0.5 Million Dollars.
 
